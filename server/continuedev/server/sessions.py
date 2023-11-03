@@ -127,3 +127,25 @@ async def save_session(body: PersistedSessionInfo):
 
     with open(getSessionsListFilePath(), "w") as f:
         json.dump(sessions_list, f)
+
+
+@router.delete("/{session_id}")
+async def delete_session(session_id: str):
+    # Read the sessions list
+    with open(getSessionsListFilePath(), "r") as f:
+        try:
+            sessions_list: List[SessionInfo] = json.load(f)
+        except json.JSONDecodeError:
+            raise Exception(
+                f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before deleting a session."
+            )
+
+    # Find and remove the session from the list
+    sessions_list = [session for session in sessions_list if session["session_id"] != session_id]
+
+    # Write the updated sessions list back to the file
+    with open(getSessionsListFilePath(), "w") as f:
+        json.dump(sessions_list, f)
+
+    # Delete the session json file
+    os.remove(getSessionFilePath(session_id))

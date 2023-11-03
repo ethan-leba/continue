@@ -4,13 +4,14 @@ import { GUIClientContext } from "../App";
 import { useDispatch, useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 import { useNavigate } from "react-router-dom";
-import { lightGray, secondaryDark, vscBackground } from "../components";
+import { lightGray, defaultBorderRadius, secondaryDark, vscBackground } from "../components";
 import styled from "styled-components";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import CheckDiv from "../components/CheckDiv";
 import { getFontSize } from "../util";
 import { newSession } from "../redux/slices/sessionStateReducer";
 import { PersistedSessionInfo } from "../schema/PersistedSessionInfo";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
 
 const Tr = styled.tr`
   &:hover {
@@ -73,6 +74,19 @@ function History() {
   );
 
   const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
+
+  const ButtonsDiv = styled.div`
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  background-color: ${vscBackground};
+  box-shadow: 1px 1px 10px ${vscBackground};
+  border-radius: ${defaultBorderRadius};
+  z-index: 100;
+  position: absolute;
+  right: 8px;
+`;
+
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -238,6 +252,33 @@ function History() {
                         </div>
                       </TdDiv>
                     </td>
+                    <ButtonsDiv>
+                      <HeaderButtonWithText
+                        text="Delete"
+                        onClick={async () => {
+                          const deleteResponse = await fetch(
+                            `${apiUrl}/sessions/${session.session_id}`,
+                            {
+                              method: "DELETE",
+                            }
+                          );
+                          if (!deleteResponse.ok) {
+                            throw new Error(
+                              `HTTP error! status: ${deleteResponse.status}`
+                            );
+                          }
+
+                          const response = await fetch(`${apiUrl}/sessions/list`);
+                          if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                          }
+                          const json = await response.json();
+                          setSessions(json);
+                        }}
+                      >
+                        <XMarkIcon width="1.4em" height="1.4em" />
+                      </HeaderButtonWithText>
+                    </ButtonsDiv>
                   </Tr>
                 </Fragment>
               );
